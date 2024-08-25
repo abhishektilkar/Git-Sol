@@ -1,6 +1,6 @@
 import { auth, signIn } from "@/auth";
 import Link from "next/link";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import UserButton from "./UserButton";
 
 export default async function NavBar() {
