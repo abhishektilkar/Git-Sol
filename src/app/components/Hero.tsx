@@ -1,7 +1,13 @@
 // components/Hero.tsx
+import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 
-const Hero = () => {
+const Hero = async () => {
+
+  const session = await auth();
+  const user = session?.user;
+  // console.log(JSON.stringify(user))
+
   return (
     <section className="bg-gray-200 text-gray-900 py-16 md:py-24">
       <div className="container mx-auto text-center">

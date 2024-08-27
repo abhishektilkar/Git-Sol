@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import AppBar from "./components/AppBar";
+import Footer from "./components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Next-Auth V5 Tutorial",
-    absolute: "Next-Auth V5 tutorial",
+    template: "%s | Git-Sol",
+    absolute: "Git-Sol",
   },
   description:
-    "Learn how to use Auth.js v5 in Next.js with custom roles, caching, and more!",
+    "Earn Sol by contributing to projects",
 };
 
 export default function RootLayout({
@@ -22,8 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <AppBar />
         {children}
         <Toaster />
+        <Footer />
       </body>
     </html>
   );

@@ -27,6 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       // Add access token to the session
+      // @ts-ignore
       session.accessToken = token.accessToken;
       return session;
     },

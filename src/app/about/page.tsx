@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 const AboutPage = () => {
   return (
     <div className="bg-gray-50">
-      <AppBar />
+      {/* <AppBar /> */}
       <main>
         <section className="py-8  text-center md:py-8">
           <div className="container text-center mx-auto">
@@ -78,7 +78,7 @@ const AboutPage = () => {
         </section>
       </main>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

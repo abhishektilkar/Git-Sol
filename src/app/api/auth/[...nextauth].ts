@@ -15,13 +15,16 @@ export const authOptions = {
     }),
   ],
   callbacks: {
+    // @ts-ignore
     async jwt({ token, account }) {
       // Persist the access token in the JWT
+      // console.log("Abhishek Token", token);
       if (account) {
         token.accessToken = account.access_token;
       }
       return token;
     },
+    // @ts-ignore
     async session({ session, token }) {
       // Add access token to the session
       session.accessToken = token.accessToken;
