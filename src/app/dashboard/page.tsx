@@ -18,8 +18,8 @@ const Page = async () => {
     // Fetch authenticated user details
     const { data: userData } = await octokit.rest.users.getAuthenticated();
     // Fetch repositories for authenticated user
-    // const
-    console.log(userData)
+    // const it
+    // console.log(userData)
     const { data: repositories } = await octokit.rest.repos.listForAuthenticatedUser({
         visibility: 'all',
         affiliation: 'owner,collaborator',

@@ -6,7 +6,7 @@ const Hero = async () => {
 
   const session = await auth();
   const user = session?.user;
-  // console.log(JSON.stringify(user))
+  // sessionTokenJSON.stringify(user))
 
   return (
     <section className="bg-gray-200 text-gray-900 py-16 md:py-24">

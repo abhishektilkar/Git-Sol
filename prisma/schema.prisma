@@ -15,7 +15,7 @@ datasource db {
 
 model User {
   id             String  @id @default(uuid())
-  email          String  @unique
+  // email          String  @unique
   gitUserId      String  @unique
   name           String?
   solanaAddress  String?
