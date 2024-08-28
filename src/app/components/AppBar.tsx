@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 const AppBar = async () => {
   const session = await auth();
   const user = session?.user;
-  // console.log('session.accessToken', session?.user)
 
   return (
     <nav className="bg-white shadow-md">

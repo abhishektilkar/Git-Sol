@@ -15,7 +15,7 @@ const AuthButtons = () => {
           <p>Welcome, {session.user?.name}</p>
           <button onClick={() => signOut()}>Sign out</button>
           {/* @ts-ignore */}
-          <p>Your GitHub Access Token: {session.accessToken}</p>
+          <p>Your GitHub Access Token: {session.sessionToken}</p>
         </>
       )}
     </div>

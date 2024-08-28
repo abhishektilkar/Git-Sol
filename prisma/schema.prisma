@@ -14,15 +14,32 @@ datasource db {
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  name    String?
-  profile Profile?
+  id             String  @id @default(uuid())
+  email          String  @unique
+  gitUserId      String  @unique
+  name           String?
+  solanaAddress  String?
+  lamportsEarned Int     @default(0)
+  lamportsLeft   Int     @default(0)
 }
 
-model Profile {
-  id     Int     @id @default(autoincrement())
-  bio    String?
-  user   User    @relation(fields: [userId], references: [id])
-  userId Int     @unique
+model Repository {
+  id                  String @id @default(uuid())
+  gitRepoId           String @unique
+  repoOwnerId         String @unique
+  totalAmount         Int
+  totalContributors   Int
+  currentContributors Int
 }
+
+model Transactions {
+  id     String @id @default(uuid())
+  type   String
+  userId String
+  status String
+}
+
+// enum paymentType {
+//   Recive
+//   Send
+// }

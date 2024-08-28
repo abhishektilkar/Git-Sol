@@ -31,7 +31,7 @@ const HomePage = async () => {
           <FAQ />
         {/* </>) :
         <div className="">
-          {user && <p className='text-indigo-500'>accessToken: {session.accessToken}</p>}
+          {user && <p className='text-indigo-500'>sessionToken: {session.sessionToken}</p>}
           <UserDashboard />
         </div> 
       } */}
