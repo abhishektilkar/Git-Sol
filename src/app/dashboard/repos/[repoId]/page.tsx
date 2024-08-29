@@ -43,7 +43,7 @@ const Page: FC<PageProps> = async ({ params }) => {
         //         'pull_request'
         //     ],
         //     config: {
-        //     url: 'http://localhost.com/webhook',
+        //     url: 'https://projectv-delta.vercel.app/api/webhook',
         //     content_type: 'json',
         //     insecure_ssl: '0'
         //     },

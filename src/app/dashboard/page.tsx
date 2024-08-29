@@ -5,6 +5,7 @@ import React from 'react';
 import UserDashboard from '../components/UserDashboard';
 import { Octokit } from "@octokit/rest";
 import prisma from '@/lib/prisma';
+import Recive from '../components/Recive';
 
 const Page = async () => {
     const session = await auth();
@@ -56,6 +57,10 @@ const Page = async () => {
             {
                 // @ts-ignore
                 <UserDashboard userData={userData} repositories={repositories} user={userValue}/>
+            }
+            {
+                //@ts-ignore
+                <Recive user={userValue} />
             }
         </div>
     );

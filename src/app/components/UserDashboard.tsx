@@ -182,7 +182,6 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, u
               {userData.location && <p className="text-gray-500 mb-1">Location: {userData.location}</p>}
               {userData.blog && <p className="text-gray-500 mb-1">Blog: <a href={userData.blog} className="text-blue-500 hover:underline">{userData.blog}</a></p>}
               {userData.twitter_username && <p className="text-gray-500 mb-1">Twitter: <a href={`https://twitter.com/${userData.twitter_username}`} className="text-blue-500 hover:underline">@{userData.twitter_username}</a></p>}
-              
               {/* Display lamportsEarned and lamportsLeft */}
               <div className="mt-4">
                 <p className="text-lg font-semibold">Lamports Earned: {user.lamportsEarned}</p>

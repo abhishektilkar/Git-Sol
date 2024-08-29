@@ -14,13 +14,14 @@ datasource db {
 }
 
 model User {
-  id             String  @id @default(uuid())
+  id              String    @id @default(uuid())
   // email          String  @unique
-  gitUserId      String  @unique
-  name           String?
-  solanaAddress  String?
-  lamportsEarned Int     @default(0)
-  lamportsLeft   Int     @default(0)
+  gitUserId       String    @unique
+  name            String?
+  solanaAddress   String?
+  lamportsEarned  Int       @default(0)
+  lamportsLeft    Int       @default(0)
+  lastTransaction DateTime?
 }
 
 model Repository {
