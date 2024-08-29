@@ -1,27 +1,7 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
-
-
-// Function to verify the GitHub webhook signature
-const verifySignature = (req: Request): boolean => {
-    const signature = req.headers.get('x-hub-signature-256');
-    const payload = req.body;
-
-    if (!signature || !payload) return false;
-
-    // @ts-ignore
-    const hmac = crypto.createHmac('sha256', 'your_secret_key');
-    const digest = `sha256=${hmac.update(JSON.stringify(payload)).digest('hex')}`;
-    return signature === digest;
-};
 
 export async function POST(req: Request) {
-    // Verify the GitHub webhook signature
-    if (!verifySignature(req)) {
-        return NextResponse.json({ message: 'Invalid signature' }, { status: 401 });
-    }
-
-    // Log the received event
+    // Parse the incoming JSON body
     const body = await req.json();
     console.log('Received webhook:', body);
 
