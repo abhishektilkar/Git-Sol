@@ -1,8 +1,6 @@
-// app/api/webhook/route.ts
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
-const secret = process.env.GITHUB_WEBHOOK_SECRET; 
 
 // Function to verify the GitHub webhook signature
 const verifySignature = (req: Request): boolean => {
@@ -12,7 +10,7 @@ const verifySignature = (req: Request): boolean => {
     if (!signature || !payload) return false;
 
     // @ts-ignore
-    const hmac = crypto.createHmac('sha256', secret);
+    const hmac = crypto.createHmac('sha256', 'your_secret_key');
     const digest = `sha256=${hmac.update(JSON.stringify(payload)).digest('hex')}`;
     return signature === digest;
 };
