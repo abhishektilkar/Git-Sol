@@ -2,9 +2,13 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import prisma from '@/lib/prisma';
+// import { PublicKey } from '@solana/web3.js';
+// import { Textarea } from '@/components/ui/textarea';
 
 interface UserDashboardProps {
   userData: {
+    id: number;
     login: string;
     name: string;
     avatar_url: string;
@@ -33,6 +37,14 @@ interface UserDashboardProps {
       name: string;
     };
   }[];
+  user: {
+    id: string;
+    gitUserId: string;
+    name?: string;
+    solanaAddress?: string;
+    lamportsEarned: number;
+    lamportsLeft: number;
+  };
 }
 
 // Define a mapping of languages to SVG icons
@@ -59,7 +71,7 @@ const languageIcons: Record<string, React.ReactNode> = {
   ),
   CSharp: (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2h12v20H6V2zM12 16h-3v-2h3v-2H9v-2h3V8H9V6h3V4H9V2h6v2h-3v2h3v2h-3v2h3v2h-3v2h3v2h-3v2h3v2h-3v2h3v-2h3v-2h-3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2h12v20H6V2zM12 16h-3v-2h3v-2H9v-2h3V8H9V6h3V4H9V2h6v2h-3v2h3v2h-3v2h3v2h-3v2h3v2h-3v2h3v-2h3v-2h-3z" />
     </svg>
   ),
   TypeScript: (
@@ -90,30 +102,25 @@ const languageIcons: Record<string, React.ReactNode> = {
   ),
 };
 
-const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories }) => {
+const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, user }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [walletAddress, setWalletAddress] = useState('');
+  const [walletAddress, setWalletAddress] = useState(user.solanaAddress || '');
   const reposPerPage = 5;
-  const router = useRouter(); // Initialize the router
-
-  // Calculate the index of the first and last repository to display
+  const router = useRouter(); 
+  const walletAddressSol = user.solanaAddress;
   const indexOfLastRepo = currentPage * reposPerPage;
   const indexOfFirstRepo = indexOfLastRepo - reposPerPage;
   const currentRepos = repositories.slice(indexOfFirstRepo, indexOfLastRepo);
-
-  // Calculate the total number of pages
   const totalPages = Math.ceil(repositories.length / reposPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  // Function to get the appropriate icon for the language
   const getLanguageIcon = (language: string) => {
     return languageIcons[language] || languageIcons['Default'];
   };
 
-  // Function to get the appropriate icon for the license
   const getLicenseIcon = (licenseName?: string) => {
     switch (licenseName) {
       case 'MIT':
@@ -127,13 +134,32 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories })
     }
   };
 
-  const handleWalletAddressSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    alert(`Wallet Address Submitted: ${walletAddress}`);
-    // Handle wallet address submission logic here
+  const handleCreateOrUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (walletAddressSol) {
+      try {
+        const response = await fetch('/api/updateSolanaAddress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            gitUserId: String(userData.id),
+            solanaAddress: walletAddress,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to update address');
+        }
+        setWalletAddress(walletAddressSol);
+        console.log('Address updated successfully');
+      } catch (error) {
+        console.error('Error updating address:', error);
+      }
+    }
   };
 
-  // Function to handle reward button click
   const handleRewardClick = (repoId: number) => {
     router.push(`/dashboard/repos/${repoId}`);
   };
@@ -142,16 +168,13 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories })
     <div className="p-6 flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-8">
       {/* User Info Section */}
       <div className="flex-none lg:w-auto lg:flex-shrink-0">
-        {/* Profile Card */}
         <div className="bg-white shadow-lg rounded-lg border border-gray-200" style={{ width: 'clamp(22rem, 30vw, 36rem)' }}>
           <div className="flex flex-col items-center p-4">
-            {/* User Image */}
             <img
               src={userData.avatar_url}
               alt={`${userData.name}'s avatar`}
               className="w-48 h-48 lg:w-80 lg:h-80 rounded-full object-cover border-4 border-indigo-500 mb-4"
             />
-            {/* User Information Below Image */}
             <div className="text-left w-full px-4">
               <h1 className="text-2xl font-bold mb-1">{userData.name}</h1>
               <p className="text-lg text-gray-600 mb-2">@{userData.login}</p>
@@ -159,6 +182,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories })
               {userData.location && <p className="text-gray-500 mb-1">Location: {userData.location}</p>}
               {userData.blog && <p className="text-gray-500 mb-1">Blog: <a href={userData.blog} className="text-blue-500 hover:underline">{userData.blog}</a></p>}
               {userData.twitter_username && <p className="text-gray-500 mb-1">Twitter: <a href={`https://twitter.com/${userData.twitter_username}`} className="text-blue-500 hover:underline">@{userData.twitter_username}</a></p>}
+              
+              {/* Display lamportsEarned and lamportsLeft */}
+              <div className="mt-4">
+                <p className="text-lg font-semibold">Lamports Earned: {user.lamportsEarned}</p>
+                <p className="text-lg font-semibold">Lamports Left: {user.lamportsLeft}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -219,15 +248,16 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories })
         </div>
       </div>
 
-      {/* Wallet Address Section */}
+      {/* Wallet Address Section */} 
+      { !walletAddress &&
       <div className="flex-none lg:w-auto lg:flex-shrink-0 mt-6 lg:mt-0">
         <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-6">
-          <h2 className="text-2xl font-bold mb-4">Submit Your Solana Wallet Address</h2>
-          <form onSubmit={handleWalletAddressSubmit} className="space-y-4">
+          <h2 className="text-2xl font-bold mb-4">Manage Your Solana Wallet Address</h2>
+          <form onSubmit={handleCreateOrUpdate} className="space-y-4">
             <input
               type="text"
               placeholder="Enter your Solana wallet address"
-              value={walletAddress}
+              value={walletAddressSol}
               onChange={(e) => setWalletAddress(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               required
@@ -236,11 +266,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories })
               type="submit"
               className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
             >
-              Submit
+              Save Address
             </button>
           </form>
         </div>
-      </div>
+      </div> }
     </div>
   );
 };
