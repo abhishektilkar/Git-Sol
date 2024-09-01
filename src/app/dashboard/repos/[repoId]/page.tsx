@@ -1,66 +1,179 @@
-import { auth } from '@/auth';
-import { Octokit } from '@octokit/rest';
-import { redirect } from 'next/navigation';
-import { FC } from 'react';
+// app/pay/page.tsx
+'use client';
 
-interface PageProps {
-  params: {
-    repoId: string;
-  };
-}
+import React, { useEffect, useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useSession } from 'next-auth/react';
+import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useParams, useRouter } from 'next/navigation';
 
-const Page: FC<PageProps> = async ({ params }) => {
-  const { repoId } = params;
+const PayPage: React.FC = () => {
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const { publicKey, sendTransaction, connected } = useWallet();
+    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const [amount, setAmount] = useState<number>(2); // Default amount set to 2 SOL
+    const [peopleCount, setPeopleCount] = useState<number>(1); // Default number of people to fund
+    const [error, setError] = useState<string | null>(null);
+    const [repoDetails, setRepoDetails] = useState<any>(null);
+    const [reward, setReward] = useState<number | null>(1.6);
+    const params = useParams();
+    const repoId = params.repoId; // Assuming repoId is passed as a route parameter
 
-  const session = await auth();
-    const user = session?.user;
-    if (!user) redirect('/');
-    
-    try {    
-        const octokit = new Octokit({
-            // @ts-ignore
-            auth: session.accessToken
-        });
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/');
+        }
+    }, [status]);
 
-        const { data: userData } = await octokit.rest.users.getAuthenticated();
-        const { data: repository } = await octokit.request('GET /repositories/{repo_id}', {
-            repo_id: repoId,
-          });
-          const owner: string = userData?.login;
-          const repo: string = repository?.name;
-        //   console.log(repository)
-        await octokit.request('GET /repos/{owner}/{repo}', {
-            owner: userData?.login,
-            repo: repository?.name,
-          });
-        console.log('value123@');
-        // await octokit.request('POST /repos/{owner}/{repo}/hooks', {
-        //     owner,
-        //     repo,
-        //     name: 'web',
-        //     active: true,
-        //     events: [
-        //         'pull_request'
-        //     ],
-        //     config: {
-        //     url: 'https://projectv-delta.vercel.app/api/webhook',
-        //     content_type: 'json',
-        //     insecure_ssl: '0'
-        //     },
-        //     headers: {
-        //     'X-GitHub-Api-Version': '2022-11-28'
-        //     }
-        // })
-    } catch(error) {
-        console.log(error);
+    useEffect(() => {
+        if (publicKey) {
+            setWalletAddress(publicKey.toString());
+        }
+    }, [publicKey]);
+
+    useEffect(() => {
+        const fetchRepoDetails = async () => {
+            try {
+                const response = await fetch(`https://api.github.com/repositories/${repoId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch repository details');
+                }
+                const data = await response.json();
+                setRepoDetails(data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        if (repoId) {
+            fetchRepoDetails();
+        }
+    }, [repoId]);
+
+    useEffect(() => {
+        // Calculate reward based on the amount entered and number of contributors
+        if (amount >= 2 && peopleCount > 0) {
+            const contributionPerPerson = (amount * 0.8) / peopleCount; // Amount each contributor gets
+            // const calculatedReward = Math.ceil(((contributionPerPerson * 0.9) * Math.pow(10, 9)) / (5 * Math.pow(10, 6)));
+            setReward(contributionPerPerson);
+        } else {
+            setReward(null); // Reset reward if conditions aren't met
+        }
+    }, [amount, peopleCount]);
+
+    const handlePayment = async () => {
+        if (!walletAddress) return;
+
+        const connection = new Connection('https://api.devnet.solana.com');
+        const toPubkey = new PublicKey('BK9Tq1BbtZvbBPkxrfeTNW1MU8cTS4tC8upB5ShWPZvg'); // Replace with your Solana public key
+
+        // Convert amount to lamports
+        const lamports = amount * LAMPORTS_PER_SOL;
+
+        if (lamports < 10 * LAMPORTS_PER_SOL) {
+            setError('The minimum amount to send is 10 SOL.');
+            return;
+        }
+
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: publicKey!,
+                toPubkey,
+                lamports: lamports,
+            })
+        );
+
+        try {
+            const signature = await sendTransaction(transaction, connection);
+            await connection.confirmTransaction(signature);
+            alert('Transaction successful!');
+            setError(null); // Reset error message on success
+        } catch (err) {
+            setError('Transaction failed. Please try again.');
+        }
+    };
+
+    useEffect(() => {
+        // Set error if amount is less than 2 SOL
+        if (amount < 2) {
+            setError('The amount must be at least 2 SOL.');
+        } else {
+            setError(null); // Reset error if valid
+        }
+        if (reward && reward < 0.00005) {
+          setError('The reward must be at least 0.00005');
+        }
+    }, [amount, reward]);
+
+    if (status === 'loading') {
+        return <p>Loading...</p>;
     }
 
-  return (
-    <div>
-      <h1>Repository ID: {repoId}</h1>
-      {/* Fetch and display data related to this repoId */}
-    </div>
-  );
+    return (
+        <div className="flex flex-col items-center justify-center h-screen p-4 bg-gray-100">
+            <h1 className="text-3xl font-bold mb-4">Connect your Solana Wallet and Pay</h1>
+
+            {repoDetails && (
+                <div className="mb-4 p-4 border rounded bg-white shadow">
+                    <h2 className="text-xl font-semibold">{repoDetails.name}</h2>
+                    <p className='mb-4'>{repoDetails.description}</p>
+                    <a href={repoDetails.html_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                        View Repository on GitHub
+                    </a>
+                </div>
+            )}
+
+            <WalletMultiButton />
+
+            {connected && (
+                <>
+                    <p className="mt-4">Connected Wallet: <span className="font-semibold">{walletAddress}</span></p>
+
+                    <div className="mt-4">
+                        <label htmlFor="amount" className="block text-gray-700">Enter amount to pay (in SOL):</label>
+                        <input
+                            type="number"
+                            id="amount"
+                            value={amount}
+                            onChange={(e) => setAmount(parseFloat(e.target.value))}
+                            min="2" // Minimum amount set to 2 SOL
+                            step="0.01"
+                            className="mt-1 p-2 border border-gray-300 rounded w-full"
+                        />
+                    </div>
+
+                    <div className="mt-4">
+                        <label htmlFor="peopleCount" className="block text-gray-700">Number of pr merges to fund:</label>
+                        <input
+                            type="number"
+                            id="peopleCount"
+                            value={peopleCount}
+                            onChange={(e) => setPeopleCount(Math.max(1, parseInt(e.target.value) || 1))} // Ensure it's a natural number
+                            min="1" // Minimum number of people set to 1
+                            className="mt-1 p-2 border border-gray-300 rounded w-full"
+                        />
+                    </div>
+
+                    {error && <p className="text-red-500 mt-2">{error}</p>}
+
+                    {reward !== null && (
+                        <div className="mt-4 p-4 bg-yellow-100 border border-yellow-300 rounded">
+                            <p className="font-semibold">Each contributors will receive: {reward} solana</p>
+                        </div>
+                    )}
+
+                    <button 
+                        onClick={handlePayment} 
+                        disabled={amount < 2 || error !== null} // Disable button if amount is invalid or error exists
+                        className={`mt-4 p-2 ${amount < 2 || error ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded transition duration-200`}>
+                        Pay {amount} SOL
+                    </button>
+                </>
+            )}
+        </div>
+    );
 };
 
-export default Page;
+export default PayPage;
