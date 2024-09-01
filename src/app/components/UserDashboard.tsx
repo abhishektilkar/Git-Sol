@@ -112,6 +112,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, u
   const indexOfFirstRepo = indexOfLastRepo - reposPerPage;
   const currentRepos = repositories.slice(indexOfFirstRepo, indexOfLastRepo);
   const totalPages = Math.ceil(repositories.length / reposPerPage);
+  const [saveAddress, setSaveAddress] = useState(false);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -136,7 +137,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, u
 
   const handleCreateOrUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (walletAddressSol) {
+    if (walletAddress) {
+      setSaveAddress(true);
       try {
         const response = await fetch('/api/updateSolanaAddress', {
           method: 'POST',
@@ -152,7 +154,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, u
         if (!response.ok) {
           throw new Error('Failed to update address');
         }
-        setWalletAddress(walletAddressSol);
+        // setWalletAddress(walletAddress);
         console.log('Address updated successfully');
       } catch (error) {
         console.error('Error updating address:', error);
@@ -248,7 +250,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, u
       </div>
 
       {/* Wallet Address Section */} 
-      { !walletAddress &&
+      { !user.solanaAddress &&
       <div className="flex-none lg:w-auto lg:flex-shrink-0 mt-6 lg:mt-0">
         <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-6">
           <h2 className="text-2xl font-bold mb-4">Manage Your Solana Wallet Address</h2>
@@ -263,7 +265,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, u
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              disabled={saveAddress}
+              className="px-4 py-2 bg-green-500 disabled:bg-green-500/75 text-white rounded-lg hover:bg-green-600"
             >
               Save Address
             </button>
