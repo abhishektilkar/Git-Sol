@@ -51,7 +51,7 @@ function SignInButton() {
             "use server";
             await signIn();
         }}>
-            <Button type="submit">Sign in</Button>
+            <Button type="submit" className='bg-blue-500'>Sign in</Button>
         </form>
     );
 }
