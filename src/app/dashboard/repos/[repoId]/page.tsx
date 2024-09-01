@@ -20,6 +20,7 @@ const PayPage: React.FC = () => {
     const [reward, setReward] = useState<number | null>(1.6);
     const params = useParams();
     const repoId = params.repoId; // Assuming repoId is passed as a route parameter
+    const [message, setMessage] = useState('');
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -72,8 +73,8 @@ const PayPage: React.FC = () => {
         // Convert amount to lamports
         const lamports = amount * LAMPORTS_PER_SOL;
 
-        if (lamports < 10 * LAMPORTS_PER_SOL) {
-            setError('The minimum amount to send is 10 SOL.');
+        if (lamports < 2 * LAMPORTS_PER_SOL) {
+            setError('The minimum amount to send is 2 SOL.');
             return;
         }
 
@@ -87,11 +88,20 @@ const PayPage: React.FC = () => {
 
         try {
             const signature = await sendTransaction(transaction, connection);
-            await connection.confirmTransaction(signature);
-            alert('Transaction successful!');
+            setMessage(`Transaction sent with signature: ${signature} \\n .....`);
             setError(null); // Reset error message on success
+            const response = await fetch('/api/addRepo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...repoDetails, lamports, peopleCount
+                }),
+            });
         } catch (err) {
-            setError('Transaction failed. Please try again.');
+            setMessage('Transaction failed. Please try again.');
+            setError(`${err}`);
         }
     };
 
@@ -112,7 +122,7 @@ const PayPage: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen p-4 bg-gray-100">
+        <div className="flex flex-col items-center min-h-screen justify-center p-4 bg-gray-100">
             <h1 className="text-3xl font-bold mb-4">Connect your Solana Wallet and Pay</h1>
 
             {repoDetails && (
@@ -170,6 +180,12 @@ const PayPage: React.FC = () => {
                         className={`mt-4 p-2 ${amount < 2 || error ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded transition duration-200`}>
                         Pay {amount} SOL
                     </button>
+                    <div className={(message.length > 15 && message[15] == 'l') ? 'text-red-500 bg-blue-500 m-2 p-2' : 'text-green-500 bg-blue-500 m-2 p-2'}>
+                        {message}
+                    </div>
+                    <div className='text-blue-500 bg-lime-500 font-medium p-2 m-2'>
+                        As transaction succeds wil create an webhook for pr merges on your repository
+                    </div>
                 </>
             )}
         </div>

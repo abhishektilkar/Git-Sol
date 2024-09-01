@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import prisma from '@/lib/prisma';
+import { AlertCircle } from 'lucide-react';
+import { validateSolanaAddress } from '@/lib/validators';
 // import { PublicKey } from '@solana/web3.js';
 // import { Textarea } from '@/components/ui/textarea';
 
@@ -137,6 +139,10 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userData, repositories, u
 
   const handleCreateOrUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!validateSolanaAddress(walletAddress)) { 
+      alert("Invalid solana Address");
+      return;
+    }
     if (walletAddress) {
       setSaveAddress(true);
       try {
