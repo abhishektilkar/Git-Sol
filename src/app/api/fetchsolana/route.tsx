@@ -2,9 +2,10 @@
 import { NextResponse } from 'next/server';
 import { Connection, Keypair, Transaction, SystemProgram } from '@solana/web3.js';
 import prisma from '@/lib/prisma';
+import paymentService from '@/lib/solanasClient'
 
 export async function POST(request: Request) {
-  const { userId, solanaAddress, amount } = await request.json();
+  const { userId, solanaAddress, amount, userGitId } = await request.json();
 
   const connection = new Connection('https://solana-devnet.g.alchemy.com/v2/UnGiz8LKYkmIRjK5eESxWaIRIKUy1uez');
   // TODO: move it to .env
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
       },
     });
 
-  console.log('@log1');
+    console.log('@log1');
 
     const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -32,11 +33,14 @@ export async function POST(request: Request) {
         })
     );
   
-  console.log('@log2');
+    console.log('@log2');
 
 
     const signature = await connection.sendTransaction(transaction, [fromWallet]);
     await connection.confirmTransaction(signature);
+
+    console.log(userGitId, 'null', signature, 'Sent')
+    await paymentService.savePayment(String(userGitId), "null", signature, 'Sent');
 
     console.log('@log3');
 

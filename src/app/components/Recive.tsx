@@ -47,6 +47,7 @@ const Recive: React.FC<ReciveProps> = ({ user }) => {
                     userId: user.id,
                     amount: user.lamportsLeft - 25000,
                     solanaAddress: user.solanaAddress,
+                    userGitId: user.gitUserId
                 }),
             });
 

@@ -96,7 +96,7 @@ const PayPage: React.FC = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    ...repoDetails, lamports, peopleCount
+                    ...repoDetails, lamports, peopleCount, signature
                 }),
             });
         } catch (err) {
